@@ -48,7 +48,10 @@ class LoginPage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Add sign-up logic here
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpPage()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   primary: Colors.redAccent,
