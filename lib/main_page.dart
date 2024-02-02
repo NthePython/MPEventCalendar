@@ -71,6 +71,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Event Management and Registration'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pushNamed(context, '/'),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.person),

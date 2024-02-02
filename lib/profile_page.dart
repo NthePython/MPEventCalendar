@@ -29,7 +29,6 @@ class _ProfilePageState extends State<ProfilePage> {
       var response = await http.get(url);
       if (response.statusCode == 200) {
         setState(() {
-          print(jsonDecode(response.body));
           user = User.fromJson(jsonDecode(response.body));
         });
       } else {
@@ -65,20 +64,21 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pushNamed(context, '/home'),
           ),
           actions: [
             IconButton(
               icon: Icon(Icons.edit),
               onPressed: () {
-                // Assuming EditProfilePage takes a User object to edit
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => EditProfilePage(user: user),
-                //   ),
-                // );
-              },
+                if (user != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfilePage(user: user!),
+                    ),
+                  );
+                }
+                },
             ),
           ],
         ),
