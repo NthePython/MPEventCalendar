@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'modules.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EventPage extends StatefulWidget {
   final String eventId;
@@ -15,11 +16,20 @@ class EventPage extends StatefulWidget {
 class _EventPageState extends State<EventPage> {
   Event? event;
   bool isLoading = true;
+  int? userId;
 
   @override
   void initState() {
     super.initState();
+    fetchUserData();
     fetchData();
+  }
+
+  void fetchUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getInt('id');
+    });
   }
 
   void fetchData() async {
@@ -42,6 +52,31 @@ class _EventPageState extends State<EventPage> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> registerToEvent() async {
+    var url = Uri.parse('http://localhost:8080/api/participants/registerToAnEvent');
+    try {
+      var response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'userId': userId,
+          'eventId': int.parse(widget.eventId),
+          'role': 'PARTICIPANT',
+        }),
+      );
+      if (response.statusCode == 200) {
+        _showTransactionResultDialog(context, 'Congratulations! Your registration was successful.');
+      } else {
+        _showTransactionResultDialog(context, 'Failed to register. Not enough balance.');
+      }
+    } catch (e) {
+      _showTransactionResultDialog(context, 'An error occurred during registration.');
+      print('Error: $e');
     }
   }
 
@@ -153,7 +188,7 @@ class _EventPageState extends State<EventPage> {
         return AlertDialog(
           title: Text('Confirmation'),
           content: Text(
-              'Are you sure to pay \$${event!.cost.toString()} in order to register for this event?'),
+              'Are you sure you want to pay \$${event!.cost.toString()} to register for this event?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -164,7 +199,7 @@ class _EventPageState extends State<EventPage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close the confirmation dialog
-                _showTransactionResultDialog(context);
+                registerToEvent(); // Trigger the registration process
               },
               child: Text('Confirm'),
             ),
@@ -173,13 +208,14 @@ class _EventPageState extends State<EventPage> {
       },
     );
   }
-  void _showTransactionResultDialog(BuildContext context) {
+
+  void _showTransactionResultDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Transaction Result'),
-          content: Text('Congratulations! Your transaction was successful.'),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
@@ -192,11 +228,6 @@ class _EventPageState extends State<EventPage> {
       },
     );
   }
-
-
-
-
-// ... Rest of your widget code including _buildDetailRow, _formatDateTime, and dialogs
 }
 
 
