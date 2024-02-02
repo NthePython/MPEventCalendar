@@ -1,85 +1,135 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'edit_profile.dart';
+import 'modules.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class ProfilePage1 extends StatelessWidget {
-  final String firstName = 'John';
-  final String lastName = 'Doe';
-  final String username = 'johndoe123';
-  final String email = 'johndoe@example.com';
-  final String phoneNumber = '+1234567890';
-  final String studentID = '2110001';
-  final String joinDate = 'January 1, 2023';
+
+
+class ProfilePage extends StatefulWidget {
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  User? user;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  void fetchUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var url = Uri.parse('http://localhost:8080/api/users/get/${prefs.getInt('id')}'); //2
+    try {
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          print(jsonDecode(response.body));
+          user = User.fromJson(jsonDecode(response.body));
+        });
+      } else {
+        print('Failed to load user data');
+      }
+    } catch (e) {
+      print('Caught error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'User Profile',
-          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditProfilePage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(height: 16.0),
-            Text(
-              'User Profile',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-              textAlign: TextAlign.center,
+    return user == null ? CircularProgressIndicator() : buildUserProfile();
+  }
+
+  Widget buildUserProfile() {
+    final String displayName = user?.firstName ?? 'Loading...';
+    final String displayLastName = user?.lastName ?? 'Loading...';
+    final String displayUsername = user?.username ?? 'Unavailable';
+    final String displayEmail = user?.email ?? 'Loading...';
+    final String displayPhoneNumber = user?.phoneNumber ?? 'Loading...';
+    final String displayStudentID = user?.id.toString() ?? 'Unavailable';
+
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'User Profile',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 16.0),
-            Expanded(
-              child: Center(
-                child: Container(
-                  width: 350,
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey,
-                      width: 1.0,
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                // Assuming EditProfilePage takes a User object to edit
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => EditProfilePage(user: user),
+                //   ),
+                // );
+              },
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              SizedBox(height: 24.0),
+              Text(
+                'User Profile',
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.0),
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: 350,
+                    height: 1000,
+                    child: SingleChildScrollView(
+                      child: Container(
+                        padding: EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            _buildInfoItem('First Name', displayName),
+                            _buildInfoItem('Last Name', displayLastName),
+                            _buildInfoItem('Username', displayUsername),
+                            _buildInfoItem('Email', displayEmail),
+                            _buildInfoItem('Phone Number', displayPhoneNumber),
+                            _buildInfoItem('Student ID', displayStudentID),
+                          ],
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      _buildInfoItem('First Name', firstName),
-                      _buildInfoItem('Last Name', lastName),
-                      _buildInfoItem('Username', username),
-                      _buildInfoItem('Email', email),
-                      _buildInfoItem('Phone Number', phoneNumber),
-                      _buildInfoItem('Student ID', studentID),
-                      _buildInfoItem('Join Date', joinDate),
-                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -96,7 +146,6 @@ class ProfilePage1 extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
-              color: Colors.blue,
             ),
           ),
           SizedBox(height: 4.0),
@@ -106,8 +155,14 @@ class ProfilePage1 extends StatelessWidget {
               fontSize: 14.0,
             ),
           ),
+          SizedBox(height: 16.0),
+          Divider(color: Colors.grey),
         ],
       ),
     );
   }
 }
+
+
+
+

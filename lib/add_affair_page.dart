@@ -1,95 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:date_time_picker/date_time_picker.dart';
+import 'main_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class AffairForm extends StatelessWidget {
-  const AffairForm({super.key});
 
+
+class EventForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Affair Form',
+      title: 'Event Form',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: AffairFormPage(),
+      home: EventFormPage(),
     );
   }
 }
 
-class AffairFormPage extends StatefulWidget {
+class EventFormPage extends StatefulWidget {
   @override
-  _AffairFormPageState createState() => _AffairFormPageState();
+  _EventFormPageState createState() => _EventFormPageState();
 }
 
-class _AffairFormPageState extends State<AffairFormPage> {
+class _EventFormPageState extends State<EventFormPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _placeController = TextEditingController();
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _descriptionController = TextEditingController();
+  TextEditingController _placeController = TextEditingController();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
   double? _cost;
   String? _selectedType;
-  final List<String> _affairTypes = ['Offline', 'Online', 'Hybrid'];
+
+  List<String> _eventTypes = ['OFFLINE', 'ONLINE', 'HYBRID'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Affair'),
+        title: Text('Create Event'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Form(
-            key: _formKey,
-            child: ListView(
-              children: <Widget>[
+          key: _formKey,
+          child: ListView(
+            children: <Widget>[
+
               TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Affair Name'),
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the affair name';
-                }
-                return null;
-              },
-            ),
-
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
-              maxLines: 5,
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the description';
-                }
-                return null;
-              },
-            ),
-
-            TextFormField(
-              controller: _placeController,
-              decoration: const InputDecoration(labelText: 'Place'),
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the affair place';
-                }
-                return null;
-              },
-            ),
-
-            DateTimePicker(
-              type: DateTimePickerType.dateTimeSeparate,
-              initialValue: _startDate.toString(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              dateLabelText: 'Start Date',
-              timeLabelText: 'Start Time',
-              onChanged: (dateTime) =>
-                  setState(() => _startDate = DateTime.parse(dateTime)),
-            ),
-
-            DateTimePicker(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Event Name'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter event name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+                maxLines: 5,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter description';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _placeController,
+                decoration: InputDecoration(labelText: 'Place'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter event place';
+                  }
+                  return null;
+                },
+              ),
+              DateTimePicker(
+                type: DateTimePickerType.dateTimeSeparate,
+                initialValue: _startDate.toString(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+                dateLabelText: 'Start Date',
+                timeLabelText: 'Start Time',
+                onChanged: (dateTime) =>
+                    setState(() => _startDate = DateTime.parse(dateTime!)),
+              ),
+              DateTimePicker(
                 type: DateTimePickerType.dateTimeSeparate,
                 initialValue: _endDate.toString(),
                 firstDate: DateTime(2000),
@@ -97,22 +98,45 @@ class _AffairFormPageState extends State<AffairFormPage> {
                 dateLabelText: 'End Date',
                 timeLabelText: 'End Time',
                 onChanged: (dateTime) =>
-                    setState(() => _endDate = DateTime.parse(dateTime)),
+                    setState(() => _endDate = DateTime.parse(dateTime!)),
+                //           DateTime _startDate = DateTime.now();
+                //       DateTime _endDate = DateTime.now();
+                //   DateTimePicker(
+                //   type: DateTimePickerType.dateTimeSeparate,
+                //   dateMask: 'yyyy-MM-dd',
+                //   initialValue: DateTime.now().toString(),
+                //   firstDate: DateTime(2000),
+                //   lastDate: DateTime(2100),
+                //   icon: Icon(Icons.event),
+                //   onChanged: (val) {
+                //     print(val);
+                //     setState(() {
+                //       _startDate = DateTime.parse(val);
+                //     });
+                //   },
+                //   validator: (val) {
+                //     if (_endDate.isBefore(_startDate)) {
+                //       return 'End time cannot be before start time';
+                //     }
+                //     return null;
+                //   },
+                //   onSaved: (val) {
+                //     print(val);
+                //   },
+                // ),
               ),
-
               TextFormField(
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Cost'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: 'Cost'),
                 onChanged: (value) {
                   if (value.isNotEmpty) {
                     _cost = double.parse(value);
                   }
                 },
               ),
-
               DropdownButtonFormField<String>(
                 value: _selectedType,
-                items: _affairTypes.map((String type) {
+                items: _eventTypes.map((String type) {
                   return DropdownMenuItem<String>(
                     value: type,
                     child: Text(type),
@@ -123,16 +147,15 @@ class _AffairFormPageState extends State<AffairFormPage> {
                     _selectedType = value!;
                   });
                 },
-                decoration: const InputDecoration(labelText: 'Affair Type'),
-                validator: (selectedType) {
-                  if (selectedType!.isEmpty) {
-                    return 'Please select affair type';
+                decoration: InputDecoration(labelText: 'Event Type'),
+                validator: (_selectedType) {
+                  if (_selectedType!.isEmpty) {
+                    return 'Please select event type';
                   }
                   return null;
                 },
               ),
-
-              const SizedBox(height: 20.0),
+              SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -140,7 +163,7 @@ class _AffairFormPageState extends State<AffairFormPage> {
                     _submitForm();
                   }
                 },
-                child: const Text('Submit'),
+                child: Text('Submit'),
               ),
             ],
           ),
@@ -149,13 +172,53 @@ class _AffairFormPageState extends State<AffairFormPage> {
     );
   }
 
-  void _submitForm() {
-    print('Affair Name: ${_nameController.text}');
-    print('Description: ${_descriptionController.text}');
-    print('Place: ${_placeController.text}');
-    print('Start Time: $_startDate');
-    print('End Time: $_endDate');
-    print('Cost: $_cost');
-    print('Affair Type: $_selectedType');
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      // Assuming allDay and eventType have been handled in your form
+      bool allDay = false; // This could be another field in your form
+      String? eventType = _selectedType; // If this is nullable in your API
+
+      // Construct the JSON object with the event data
+      final Map<String, dynamic> eventData = {
+        "name": _nameController.text,
+        "description": _descriptionController.text,
+        "place": _placeController.text.isNotEmpty ? _placeController.text : null, // Assuming 'place' can be null in your API
+        "startTime": _startDate.toIso8601String(),
+        "endTime": _endDate.toIso8601String(),
+        "cost": _cost,
+        "place": _placeController.text.isNotEmpty ? _placeController.text : null, // Assuming 'place' can be null in your API
+        "eventType": _selectedType,
+        "allDay" : false
+      };
+
+      // Convert event data to JSON string
+      String jsonEvent = jsonEncode(eventData);
+
+      // Use the correct endpoint for adding an event
+      var url = Uri.parse('http://localhost:8080/api/events/save');
+
+      try {
+        // Send the request to the API
+        var response = await http.post(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEvent,
+        );
+
+        // Check the response status code
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          // If the event was added successfully, navigate to the main page
+          Navigator.pushNamed(context, '/mainPage');
+        } else {
+          // If the server did not return a "200 OK response",
+          // then throw an exception.
+          throw Exception('Failed to add event');
+        }
+      } catch (e) {
+        // Handle any exceptions here
+        print(e);
+      }
+    }
   }
+
 }
